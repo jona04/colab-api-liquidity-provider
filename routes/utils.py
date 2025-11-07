@@ -5,10 +5,10 @@ from pydantic import BaseModel
 
 from fastapi import HTTPException
 from web3 import Web3
-from ..domain.models import StatusCore
-from ..services.chain_reader import USD_SYMBOLS, compute_status, sqrtPriceX96_to_price_t1_per_t0
+from domain.models import StatusCore
+from services.chain_reader import USD_SYMBOLS, compute_status, sqrtPriceX96_to_price_t1_per_t0
 from adapters.aerodrome import AerodromeAdapter
-from ..config import get_settings
+from config import get_settings
 
 
 ZERO_ADDR = "0x0000000000000000000000000000000000000000"

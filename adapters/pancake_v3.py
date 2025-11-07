@@ -3,8 +3,8 @@ import os
 from typing import Dict, Any, Tuple, Optional
 from web3 import Web3
 from .base import DexAdapter
-from bot.utils.math_univ3 import get_sqrt_ratio_at_tick, get_amounts_for_liquidity
-from ..config import get_settings
+from adapters.utils import get_sqrt_ratio_at_tick, get_amounts_for_liquidity
+from config import get_settings
 
 ABI_POOL = [
     {"name":"slot0","outputs":[

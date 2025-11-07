@@ -9,9 +9,9 @@ This is intentionally pure/stateless; callers inject (dex, alias, adapter).
 """
 
 from typing import List, Dict, Any
-from ..services.strategy_repo import load_strategies
-from ..strategy.registry import handlers
-from ..domain.strategy_models import StrategyProposal, StrategyDetails
+from services.strategy_repo import load_strategies
+from strategy.registry import handlers
+from domain.strategy_models import StrategyProposal, StrategyDetails
 
 def evaluate_strategies(dex: str, alias: str, adapter, extra_ctx: Dict[str, Any]) -> List[StrategyProposal]:
     cfg = load_strategies()

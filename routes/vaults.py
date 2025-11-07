@@ -7,23 +7,23 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, Body
 from web3 import Web3
 
-from ..config import get_settings
+from config import get_settings
 from routes.utils import ZERO_ADDR, estimate_eth_usd_from_pool, normalize_swap_pools_input, resolve_pool_from_vault, snapshot_status, tick_spacing_candidates
 
-from ..domain.swap import SwapExactInRequest, SwapQuoteRequest
-from ..domain.models import (
+from domain.swap import SwapExactInRequest, SwapQuoteRequest
+from domain.models import (
     DexName, VaultList, VaultRow, AddVaultRequest, SetPoolRequest,
     DeployVaultRequest, OpenRequest, RebalanceRequest, WithdrawRequest,
     DepositRequest, CollectRequest, BaselineRequest, StatusResponse, StatusCore
 )
-from ..services.exceptions import TransactionBudgetExceededError, TransactionRevertedError
-from ..services import state_repo, vault_repo
-from ..services.tx_service import TxService
-from ..services.chain_reader import USD_SYMBOLS, _value_usd, compute_status, price_to_tick, sqrtPriceX96_to_price_t1_per_t0
+from services.exceptions import TransactionBudgetExceededError, TransactionRevertedError
+from services import state_repo, vault_repo
+from services.tx_service import TxService
+from services.chain_reader import USD_SYMBOLS, _value_usd, compute_status, price_to_tick, sqrtPriceX96_to_price_t1_per_t0
 from adapters.pancake_v3 import PancakeV3Adapter
 from adapters.uniswap_v3 import UniswapV3Adapter
 from adapters.aerodrome import AerodromeAdapter
-from ..domain.models import StakeRequest, UnstakeRequest, ClaimRewardsRequest
+from domain.models import StakeRequest, UnstakeRequest, ClaimRewardsRequest
 
 router = APIRouter(tags=["vaults"])
 

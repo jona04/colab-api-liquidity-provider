@@ -5,7 +5,7 @@ Vault registry (vaults.json) – manages vault metadata and active alias.
 import json
 from pathlib import Path
 from typing import Dict, Any, Optional
-from ..config import get_settings
+from config import get_settings
 
 def _dex_root(dex: str) -> Path:
     s = get_settings()

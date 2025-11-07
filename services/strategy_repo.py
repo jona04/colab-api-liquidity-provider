@@ -12,10 +12,10 @@ This module is intentionally thin; validation happens in Pydantic models.
 import json
 from pathlib import Path
 from typing import Optional
-from ..domain.strategy_models import StrategiesConfig
+from domain.strategy_models import StrategiesConfig
 
-BASE = Path(__file__).resolve().parents[3]  # repo root
-DATA_DIR = BASE / "data"
+BASE = Path(__file__).resolve().parents[1]  # repo root
+DATA_DIR = "data"
 
 def _path_for() -> Path:
     d = DATA_DIR

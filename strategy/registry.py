@@ -16,9 +16,9 @@ Current handlers:
 import math
 import time
 from typing import Dict, Any, Tuple
-from ..domain.models import StatusCore
-from ..services.chain_reader import compute_status
-from ..services.state_repo import load_state
+from domain.models import StatusCore
+from services.chain_reader import compute_status
+from services.state_repo import load_state
 from adapters.uniswap_v3 import UniswapV3Adapter
 
 USD_NAMES = {"USDC", "USDbC", "USDCE", "USDT", "DAI", "USDD", "USDP", "BUSD"}

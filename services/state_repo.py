@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
-from ..config import get_settings
+from config import get_settings
 
 def _dex_root(dex: str) -> Path:
     s = get_settings()
