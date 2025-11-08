@@ -11,15 +11,15 @@ import math
 from time import time
 from dataclasses import dataclass, asdict
 from decimal import Decimal, getcontext
-from typing import Dict, Any, Tuple
+from typing import Dict
 from config import get_settings
 from .state_repo import load_state, save_state
-from adapters.uniswap_v3 import UniswapV3Adapter
 from domain.models import (
     PricesBlock, PricesPanel, RewardsCollectedCum, UsdPanelModel,
     HoldingsSide, HoldingsMeta, HoldingsBlock,
     FeesUncollected, StatusCore, FeesCollectedCum
 )
+from services import vault_repo
 from web3 import Web3
 
 getcontext().prec = 80
@@ -89,6 +89,96 @@ def _value_usd(
     # fallback: trata token1 como quote
     return amt0_h * p_t1_t0 + amt1_h
 
+
+def _pancake_reward_usd_est(
+    adapter,
+    dex: str,
+    alias: str,
+    pending_amount: float,
+    reward_token_addr: str
+) -> float | None:
+    """
+    Estima o valor em USD dos rewards CAKE usando a pool CAKE/USDC
+    configurada em swap_pools (ex: "CAKE_USDC").
+    """
+    try:
+        v = vault_repo.get_vault(dex, alias)
+    except Exception:
+        v = None
+    if not v:
+        return None
+
+    sp = (v.get("swap_pools") or {}) if isinstance(v, dict) else {}
+    ref = sp.get("CAKE_USDC") or sp.get("cake_usdc")
+
+    # fallback: tenta achar qualquer pool pancake que pareça ser CAKE/USDC
+    if not ref:
+        for _k, r in sp.items():
+            try:
+                if (r.get("dex") == "pancake"
+                    and Web3.is_address(r.get("pool"))):
+                    ref = r
+                    break
+            except Exception:
+                continue
+
+    if not ref or ref.get("dex") != "pancake":
+        return None
+
+    pool_addr = ref.get("pool")
+    if not pool_addr or not Web3.is_address(pool_addr):
+        return None
+
+    w3 = adapter.w3
+    try:
+        pool = w3.eth.contract(
+            address=Web3.to_checksum_address(pool_addr),
+            abi=adapter.pool_abi(),
+        )
+        t0 = pool.functions.token0().call()
+        t1 = pool.functions.token1().call()
+
+        erc0 = adapter.erc20(t0)
+        erc1 = adapter.erc20(t1)
+
+        dec0 = int(erc0.functions.decimals().call())
+        dec1 = int(erc1.functions.decimals().call())
+
+        try:
+            sym0 = erc0.functions.symbol().call()
+        except Exception:
+            sym0 = "T0"
+        try:
+            sym1 = erc1.functions.symbol().call()
+        except Exception:
+            sym1 = "T1"
+
+        slot0 = pool.functions.slot0().call()
+        sqrtP = int(slot0[0])
+        p_t1_t0 = sqrtPriceX96_to_price_t1_per_t0(sqrtP, dec0, dec1)
+
+        reward = Web3.to_checksum_address(reward_token_addr)
+
+        price_cake_usd = None
+
+        # Caso típico: token0 = CAKE, token1 = USDC
+        if reward == Web3.to_checksum_address(t0) and _is_usd_symbol(sym1):
+            price_cake_usd = float(p_t1_t0)
+
+        # Invertido: token1 = CAKE, token0 = USDC
+        elif reward == Web3.to_checksum_address(t1) and _is_usd_symbol(sym0):
+            if p_t1_t0 > 0:
+                price_cake_usd = float(1.0 / p_t1_t0)
+
+        if price_cake_usd is None:
+            return None
+
+        return float(pending_amount) * float(price_cake_usd)
+
+    except Exception:
+        return None
+
+
 def compute_status(adapter, dex, alias: str) -> StatusCore:
     """
     Build a full "status" model from on-chain reads.
@@ -135,16 +225,24 @@ def compute_status(adapter, dex, alias: str) -> StatusCore:
     if has_gauge and token_id != 0:
         try:
             if dex == "pancake":
-                # MasterChefV3 (Pancake)
+                # MasterChefV3 (Pancake) rewards em CAKE
                 mc = adapter.gauge_contract()
                 if mc is not None:
                     pending_raw = int(mc.functions.pendingCake(int(token_id)).call())
                     reward_token_addr = mc.functions.CAKE().call()
                     erc = adapter.erc20(reward_token_addr)
+
                     r_sym = erc.functions.symbol().call()
                     r_dec = int(erc.functions.decimals().call())
                     pending_h = float(pending_raw) / (10 ** r_dec)
-                    usd_est = pending_h if (r_sym.upper() in USD_SYMBOLS or _is_stable_addr(reward_token_addr)) else None
+
+                    usd_est = _pancake_reward_usd_est(
+                        adapter=adapter,
+                        dex=dex,
+                        alias=alias,
+                        pending_amount=pending_h,
+                        reward_token_addr=reward_token_addr,
+                    )
 
                     gauge_rewards_block = {
                         "reward_token": reward_token_addr,

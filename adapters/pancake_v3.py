@@ -6,22 +6,6 @@ from .base import DexAdapter
 from adapters.utils import get_sqrt_ratio_at_tick, get_amounts_for_liquidity
 from config import get_settings
 
-ABI_POOL = [
-    {"name":"slot0","outputs":[
-        {"type":"uint160","name":"sqrtPriceX96"},
-        {"type":"int24","name":"tick"},
-        {"type":"uint16"},{"type":"uint16"},{"type":"uint16"},{"type":"uint8"},{"type":"bool"}],
-     "inputs":[],"stateMutability":"view","type":"function"},
-    {"name":"observe","outputs":[
-        {"type":"int56[]","name":"tickCumulatives"},
-        {"type":"uint160[]","name":"secondsPerLiquidityCumulativeX128"}],
-     "inputs":[{"type":"uint32[]","name":"secondsAgos"}],
-     "stateMutability":"view","type":"function"},
-    {"name":"token0","outputs":[{"type":"address"}],"inputs":[],"stateMutability":"view","type":"function"},
-    {"name":"token1","outputs":[{"type":"address"}],"inputs":[],"stateMutability":"view","type":"function"},
-    {"name":"fee","outputs":[{"type":"uint24"}],"inputs":[],"stateMutability":"view","type":"function"},
-    {"name":"tickSpacing","outputs":[{"type":"int24"}],"inputs":[],"stateMutability":"view","type":"function"},
-]
 
 ABI_ERC20 = [
     {"name":"decimals","outputs":[{"type":"uint8"}],"inputs":[],"stateMutability":"view","type":"function"},
